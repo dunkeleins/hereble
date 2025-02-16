@@ -3,7 +3,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-#define SERVER_URL "http://your-server.com/api/bluetooth"
+#define SERVER_URL "http://server.local/sendbledata"
 #define WIFI_SSID "your-SSID"
 #define WIFI_PASSWORD "your-PASSWORD"
 #define RSSI_THRESHOLD 10  // Mindeständerung, um eine Meldung zu senden
