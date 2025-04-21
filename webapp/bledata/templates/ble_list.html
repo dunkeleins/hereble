@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE Data</title>
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+    <h2><a href="{% url 'bledata' %}">
+        BLE Data
+    </a></h2>
+    <p>Liste aller MAC Adressen die über RSSI -30 in der Datenbank zu finden sind.</p>
+    <table>
+        <tr>
+            <th>Hour</th>
+            <th>MAC-address</th>
+            <th>RSSI</th>
+            <th>Name</th>
+            <th>Count</th>
+        </tr>
+        {% for entry in ble_entries %}
+        <tr>
+            <td>{{ entry.hour }}</td>
+            <td>{{ entry.mac }}</td>
+            <td>{{ entry.rssi }}</td>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.count }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No data found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

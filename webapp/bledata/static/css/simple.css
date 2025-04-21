@@ -1,0 +1,31 @@
+/* Alle Texte im Dokument in Monospace */
+body {
+    font-family: 'Courier New', Courier, monospace;
+}
+table { 
+    width: 100%; border-collapse: collapse; 
+}
+th, td { 
+    border: 1px solid black; padding: 8px; text-align: left; 
+}
+th { 
+    background-color: #f2f2f2; 
+}
+a {
+    text-decoration: none; /* Entfernt die Unterstreichung */
+    color: inherit;        /* Erbt die Textfarbe vom übergeordneten Element */
+}
+
+a:visited {
+    color: inherit; /* Setzt die Farbe von besuchten Links auf die gleiche wie für normale Links */
+}
+
+a:hover {
+    text-decoration: none; /* Entfernt die Unterstreichung beim Hover */
+    color: inherit;        /* Erbt die Farbe beim Hover */
+}
+
+a:focus {
+    text-decoration: none; /* Entfernt die Unterstreichung beim Fokus */
+    color: inherit;        /* Erbt die Farbe beim Fokus */
+}

@@ -1,0 +1,231 @@
+{% load static %}
+<!-- templates/ble_graph.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BLE RSSI Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+    <h2><a href="{% url 'bledata' %}">
+        BLE RSSI Verlauf
+    </a></h2>
+
+    <label for="macSelect">Wähle MAC-Adresse(n):</label>
+    <label>Zeitraum:</label>
+    <input type="datetime-local" id="startTime">
+    <input type="datetime-local" id="endTime">
+    <button onclick="loadChart()">Anzeigen</button>
+    <div id="macCheckboxes"></div>
+    <button type="button" onclick="checkAllMacs()">Alle RSSI MAX 30 auswählen</button>
+    <button type="button" onclick="uncheckAllMacs()">Auswahl löschen </button>
+    <label for="onlyWeakDevices">Nur schwache Geräte anzeigen:</label>
+    <input type="checkbox" id="onlyWeakDevices" checked>
+    <br />
+    <canvas id="rssiChart" width="800" height="400"></canvas>
+
+    <script>
+        let chart;
+
+        function checkAllMacs() {
+            const checkboxes = document.querySelectorAll('input[name="macs"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+        
+        function uncheckAllMacs() {
+            const checkboxes = document.querySelectorAll('input[name="macs"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                macs: params.get("macs") ? params.get("macs").split(",") : [],
+                start: params.get("start"),
+                end: params.get("end")
+            };
+        }
+
+        function filterWeakDevices(rawData) {
+            if (onlyWeakDevices) {
+                // Schritt 1: Gruppiere Daten nach MAC
+                const macGroups = {};
+                rawData.forEach(entry => {
+                    if (!macGroups[entry.mac]) {
+                        macGroups[entry.mac] = [];
+                    }
+                    macGroups[entry.mac].push(entry);
+                });
+
+                // Schritt 2: Filtere MACs raus, die jemals > -30 hatten
+                const filteredGroups = Object.values(macGroups).filter(entries => {
+                    return entries.every(e => e.rssi <= -50);
+                });
+
+                // Schritt 3: Wieder flaches Array draus machen
+                bufData = filteredGroups.flat();
+            }
+            return bufData;
+        }
+
+        async function fetchMACs() {
+            const { macs: selectedMacsFromUrl } = getUrlParams();
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+
+            const res = await fetch(`/api/mac_list?start=${start}&end=${end}`);
+            const macs = await res.json();
+            const checkboxesContainer = document.getElementById("macCheckboxes");
+            checkboxesContainer.innerHTML = ""; // Clear any existing checkboxes
+
+            macs.forEach(mac => {
+                let checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.value = mac;
+                checkbox.name = "macs"; // Same name for all checkboxes
+                if (selectedMacsFromUrl.includes(mac)) {
+                    checkbox.checked = true;
+                }
+                let label = document.createElement("label");
+                label.textContent = mac;
+                label.insertBefore(checkbox, label.firstChild); // Insert checkbox before label text
+                checkboxesContainer.appendChild(label);
+                //checkboxesContainer.appendChild(document.createElement("nbsp")); // Add a line break
+            });
+        }
+
+        async function loadChart() {
+            const selectedMacs = Array.from(document.querySelectorAll('input[name="macs"]:checked')).map(el => el.value);
+            //const macSelect = document.getElementById("macSelect");
+            //const selectedMacs = Array.from(macSelect.selectedOptions).map(opt => opt.value);
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            const onlyWeakDevices = document.getElementById("onlyWeakDevices").checked;
+
+            const response = await fetch(`/api/bledata?macs=${selectedMacs.join(',')}&start=${start}&end=${end}`);
+            const rawData = await response.json();
+
+            const colors = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0"];
+            
+            let allData = [];
+
+            if (selectedMacs.length === 0) {
+                const macAddresses = [...new Set(rawData.map(entry => entry.mac))]; 
+                allData = macAddresses.map((mac, idx) => {
+                    // Filter MAC Adressen die nie nah am Messgerät waren
+                    let bufData = filterWeakDevices(rawData); 
+
+                    const macData = bufData.filter(entry => entry.mac === mac); // Filtere nach MAC-Adresse
+                    return {
+                        label: mac,
+                        data: macData.map(entry => ({ x: new Date(entry.timestamp), y: entry.rssi })),
+                        borderColor: colors[idx % colors.length],
+                        tension: 0.2
+                    };
+                });
+            } else {
+                allData = selectedMacs.map((mac, idx) => {
+                // Filter MAC Adressen die nie nah am Messgerät waren
+                let bufData = filterWeakDevices(rawData);
+                const macData = bufData.filter(entry => entry.mac === mac); // Filtere nach MAC-Adresse
+
+                return {
+                    label: mac,
+                    data: macData.map(entry => ({ x: new Date(entry.timestamp), y: entry.rssi })),
+                    borderColor: colors[idx % colors.length],
+                    tension: 0.2
+                };
+                });
+            }
+
+
+            const timestamps = allData.flatMap(d => d.data.map(entry => entry.x));
+            const minTime = new Date(Math.min(...timestamps));
+            const maxTime = new Date(Math.max(...timestamps));
+
+            if (window.rssiChart instanceof Chart) {
+                window.rssiChart.destroy();
+            }
+
+            const ctx = document.getElementById("rssiChart").getContext("2d");
+            window.rssiChart = new Chart(ctx, {
+                // type: "line",
+                type: "bubble",
+                data: {
+                datasets: allData
+                },
+                options: {
+                    elements: {
+                        point: {
+                            radius: 5,
+                            backgroundColor: '#666',
+                            hoverRadius: 10
+                        }
+                    },
+                responsive: true,
+                scales: {
+                    x: {
+                    type: "time",
+                    time: {
+                        tooltipFormat: 'yyyy-MM-dd HH:mm:ss',
+                        unit: 'minute'
+                    },
+                    min: minTime,
+                    max: maxTime,
+                    title: {
+                        display: true,
+                        text: "Zeit"
+                    }
+                    },
+                    y: {
+                    title: {
+                        display: true,
+                        text: "RSSI (dBm)"
+                    }
+                    }
+                }
+                }
+            });
+        }
+
+        function setDefaultTimestamps() {
+            const { start, end } = getUrlParams();
+
+            const formatDateTime = dt => {
+                // UTC-Zeit in lokale Zeit umwandeln und als ISO-String zurückgeben
+                const localDate = new Date(dt - dt.getTimezoneOffset() * 60000); // Offset in Minuten, multipliziert mit 60000 für Millisekunden
+                return localDate.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+            };
+
+            let defaultStart, defaultEnd;
+
+            if (start) {
+                document.getElementById("startTime").value = start;
+                defaultStart = new Date(start);
+            } else {
+                defaultStart = new Date(Date.now() - 60 * 60 * 1000);
+                document.getElementById("startTime").value = formatDateTime(defaultStart);
+            }
+
+            if (end) {
+                document.getElementById("endTime").value = end;
+                defaultEnd = new Date(end);
+            } else {
+                defaultEnd = new Date();
+                document.getElementById("endTime").value = formatDateTime(defaultEnd);
+            }
+
+            document.getElementById("startTime").value = formatDateTime(defaultStart);
+            document.getElementById("endTime").value = formatDateTime(defaultEnd);
+        }
+
+        // Am Ende von fetchMACs() aufrufen
+        fetchMACs().then(setDefaultTimestamps);
+    </script>
+</body>
+</html>
+

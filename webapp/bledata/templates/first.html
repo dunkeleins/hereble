@@ -1,9 +1,18 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BLE Analyzer</title>
+        <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+        <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    </head>
 <body>
 
-<h1>Hello World!</h1>
-<p>Welcome to my first Django project!</p>
-
+<h1>BLE Analyzer</h1>
+<p>Keep it (stupid) simple</p>
+<a href="{% url 'list_ble_data' %}">BLE List</a><br/>
+<a href="{% url 'show_graph' %}">BLE Graph</a>
 </body>
 </html>
