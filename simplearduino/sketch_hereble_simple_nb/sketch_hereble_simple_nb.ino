@@ -44,8 +44,8 @@ void setup() {
     pinMode(buttonPin, INPUT_PULLUP);
 
     preferences.begin("settings", false);
-    rssiThreshold = preferences.getInt("rssiThreshold", -40);
-    rssiThreshold = -200;
+    rssiThreshold = preferences.getInt("rssiThreshold", -30);
+    rssiThreshold = -30;
 
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
