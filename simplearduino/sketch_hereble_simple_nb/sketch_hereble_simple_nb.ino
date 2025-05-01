@@ -44,8 +44,8 @@ void setup() {
     pinMode(buttonPin, INPUT_PULLUP);
 
     preferences.begin("settings", false);
-    rssiThreshold = preferences.getInt("rssiThreshold", -30);
-    rssiThreshold = -30;
+    rssiThreshold = preferences.getInt("rssiThreshold", -150);
+    rssiThreshold = -150;
 
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
@@ -118,6 +118,7 @@ void bleScanTask(void * parameter) {
             jsonDevice["distance"] = calculateDistance(device.getRSSI(), referenceRSSI, pathLossExponent);
             jsonDevice["service_uuid"] = device.getServiceUUID().toString().c_str();
             jsonDevice["manufacturer_data"] = "";
+            jsonDevice["environment"] = "";
 
             deviceNr++;
         }

@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BLE DB Analyse Table</title>
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+    <h2><a href="{% url 'bledata' %}">
+        BLE DB Data Analyse
+    </a></h2>
+    <p>Liste aller Geräte nach Namen und 5 Sekunden Interval mit RSSI Werten und Anzahl der Messpunkte.</p>
+
+<div>
+    {{ html_table|safe }}
+</div>
+
+</body>
+</html>

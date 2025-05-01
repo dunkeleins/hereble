@@ -3,6 +3,8 @@
     "tailwindcss": "^4.0.6"
   },
   "dependencies": {
-    "django": "^1.0.0"
+    "django": "^1.0.0",
+    "numpy": "^0.0.1",
+    "pandas": "^0.0.3"
   }
 }

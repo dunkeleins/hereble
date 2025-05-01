@@ -20,6 +20,7 @@
             <th>RSSI</th>
             <th>Name</th>
             <th>Count</th>
+            <th>Environment</th>
         </tr>
         {% for entry in ble_entries %}
         <tr>
@@ -28,10 +29,11 @@
             <td>{{ entry.rssi }}</td>
             <td>{{ entry.name }}</td>
             <td>{{ entry.count }}</td>
+            <td>{{ entry.environment }}</td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="6">No data found.</td>
+            <td colspan="7">No data found.</td>
         </tr>
         {% endfor %}
     </table>

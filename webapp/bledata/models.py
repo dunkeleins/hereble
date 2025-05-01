@@ -9,6 +9,7 @@ class BLEData(models.Model):
     distance = models.FloatField()
     service_uuid = models.CharField(max_length=100)
     manufacturer_data = models.CharField(max_length=100)
+    environment = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return self.name

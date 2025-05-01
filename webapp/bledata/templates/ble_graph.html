@@ -31,6 +31,10 @@
     <script>
         let chart;
 
+        window.addEventListener("DOMContentLoaded", () => {
+            loadChart();
+        });
+
         function checkAllMacs() {
             const checkboxes = document.querySelectorAll('input[name="macs"]');
             checkboxes.forEach(cb => cb.checked = true);

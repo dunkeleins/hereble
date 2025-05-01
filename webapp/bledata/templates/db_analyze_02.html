@@ -1,0 +1,116 @@
+{% load static %}
+<!-- templates/db_analyze_02.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BLE RSSI Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+</head>
+<body>
+    <h2><a href="{% url 'bledata' %}">
+        BLE DB Analyser Grafik
+    </a></h2>
+    <label>Zeitraum:</label>
+    <input type="datetime-local" id="startTime">
+    <input type="datetime-local" id="endTime">
+    <input type="text" id="nameFilter" placeholder="Gerätename (z.B. Apple)">
+    <button onclick="loadRSSIChart()">Anzeigen</button>
+    <br />
+    <canvas id="rssiChart" width="800" height="400"></canvas>
+
+    <script>
+        let rssiChart;
+        
+        window.addEventListener("DOMContentLoaded", () => {
+            loadRSSIChart();
+        });
+
+        async function loadRSSIChart() {
+            const start = document.getElementById("startTime").value;
+            const end = document.getElementById("endTime").value;
+            const nameFilter = document.getElementById("nameFilter").value.trim();
+            const res = await fetch(`/api/rssi_chart_data?name=${nameFilter}&start=${start}&end=${end}`);
+            const { datasets } = await res.json();
+            //const datasets = test_dataset; // Testdaten verwenden
+            //console.log(datasets);
+
+            const ctx = document.getElementById("rssiChart").getContext("2d");
+
+            if (rssiChart instanceof Chart) rssiChart.destroy();
+            
+            rssiChart = new Chart(ctx, {
+                type: "line",
+                data: { datasets },
+                options: {
+                    scales: {
+                        x: {
+                            type: "time",
+                            time: {
+                                tooltipFormat: "yyyy-MM-dd HH:mm:ss",
+                                unit: "second",  // minute
+                                stepSize: 5,
+                                displayFormats: {
+                                    second: "HH:mm:ss"
+                                }
+                            },
+                            title: { display: true, text: "Zeit" }
+                        },
+                        y: {
+                            title: { display: true, text: "RSSI (dBm)" }
+                        }
+                    }
+                }
+            });
+        }  
+
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                start: params.get("start"),
+                end: params.get("end"),
+                name: params.get("name") ? params.get("name").split(",") : [],
+            };
+        }
+
+        function setDefaultTimestamps() {
+            const { start, end, name } = getUrlParams();
+
+            document.getElementById("nameFilter").value = name;
+
+            const formatDateTime = dt => {
+                // UTC-Zeit in lokale Zeit umwandeln und als ISO-String zurückgeben
+                const localDate = new Date(dt - dt.getTimezoneOffset() * 60000); // Offset in Minuten, multipliziert mit 60000 für Millisekunden
+                return localDate.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+            };
+
+            let defaultStart, defaultEnd;
+
+            if (start) {
+                document.getElementById("startTime").value = start;
+                defaultStart = new Date(start);
+            } else {
+                defaultStart = new Date(Date.now() - 60 * 60 * 1000);
+                document.getElementById("startTime").value = formatDateTime(defaultStart);
+            }
+
+            if (end) {
+                document.getElementById("endTime").value = end;
+                defaultEnd = new Date(end);
+            } else {
+                defaultEnd = new Date();
+                document.getElementById("endTime").value = formatDateTime(defaultEnd);
+            }
+
+            document.getElementById("startTime").value = formatDateTime(defaultStart);
+            document.getElementById("endTime").value = formatDateTime(defaultEnd);
+        }
+
+        setDefaultTimestamps();
+    </script>
+</body>
+</html>
+
