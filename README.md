@@ -6,6 +6,12 @@ simplearduino:
     ESP32 program to scan for BLE devices and send information on serial output.
 - sketch_herble_simple_nb:
     ESP32 program to send BLE informations in JSON format to a http service.
+- sketch_hereble_webservice:
+    ESP32 program runs a webservice on ESP32
 
 webapp:
-- WebApp in Python Django recieves JSON format and logs to database.
+- webapp_
+    WebApp in Python Django recieves JSON format and logs to database.
+
+To run the webapp: 
+    py manage.py runserver 192.168.137.1:80 
