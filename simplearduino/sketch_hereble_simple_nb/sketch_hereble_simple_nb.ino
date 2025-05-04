@@ -118,7 +118,7 @@ void bleScanTask(void * parameter) {
             jsonDevice["distance"] = calculateDistance(device.getRSSI(), referenceRSSI, pathLossExponent);
             jsonDevice["service_uuid"] = device.getServiceUUID().toString().c_str();
             jsonDevice["manufacturer_data"] = "";
-            jsonDevice["environment"] = "";
+            jsonDevice[""] = "";
 
             deviceNr++;
         }
