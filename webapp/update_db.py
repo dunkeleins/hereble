@@ -134,6 +134,10 @@ end = make_aware(datetime(2025, 4, 12, 23, 59, 59))
 BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Crowded")
 
 start = make_aware(datetime(2025, 4, 13,  0, 0, 0))
+end = make_aware(datetime(2025, 4, 13, 23, 59, 59))
+BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Open")
+
+start = make_aware(datetime(2025, 4, 20,  0, 0, 0))
 end = make_aware(datetime(2025, 4, 20, 23, 59, 59))
 BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Open")
 
@@ -141,12 +145,16 @@ start = make_aware(datetime(2025, 4, 21, 0, 0, 0))
 end = make_aware(datetime(2025, 4, 21, 23, 59, 59))
 BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Open2")
 
-start = make_aware(datetime(2025, 4, 18, 0, 0, 0))
-end = make_aware(datetime(2025, 4, 18, 23, 59, 59))
+start = make_aware(datetime(2025, 4, 15, 0, 0, 0))
+end = make_aware(datetime(2025, 4, 19, 23, 59, 59))
 BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Crowded")
 
 start = make_aware(datetime(2025, 4, 22, 0, 0, 0))
 end = make_aware(datetime(2025, 4, 26, 23, 59, 59))
+BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Crowded")
+
+start = make_aware(datetime(2025, 4, 21, 17, 40, 0))
+end = make_aware(datetime(2025, 4, 21, 17, 50, 59))
 BLEData.objects.filter(timestamp__range=(start, end)).update(environment="Crowded")
 
 print("Datenbank aktualisiert!")
