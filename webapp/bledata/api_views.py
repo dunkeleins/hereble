@@ -24,17 +24,17 @@ def bledata_json(request):
         return JsonResponse({"error": "Invalid datetime format"}, status=400)
 
     data = BLEData.objects.filter(timestamp__range=(start, end)).values(
-        "mac", "rssi", "name", "timestamp"
+        "mac_hash", "rssi", "name", "timestamp"
     ).order_by("-timestamp")
     
     if mac_list and mac_list != [""]:
-        data = data.filter(mac__in=mac_list)
+        data = data.filter(mac_hash__in=mac_list)
 
     return JsonResponse(list(data), safe=False)
 
 def mac_list(request):
     # filter auf rssi > -30
-    macs = BLEData.objects.filter(rssi__gt=-30).values_list("mac", flat=True).distinct().order_by("mac")
+    macs = BLEData.objects.filter(rssi__gt=-30).values_list("mac_hash", flat=True).distinct().order_by("mac_hash")
     return JsonResponse(list(macs), safe=False)
 
 def rssi_data(request):
@@ -49,11 +49,11 @@ def rssi_data(request):
         return JsonResponse({"error": "Invalid date format"}, status=400)
 
     result = {}
-    for mac in macs:
-        data = BLEData.objects.filter(mac=mac, timestamp__range=(start, end)) \
+    for mac_hash in macs:
+        data = BLEData.objects.filter(mac_hash=mac_hash, timestamp__range=(start, end)) \
                               .order_by("timestamp") \
                               .values("timestamp", "rssi")
-        result[mac] = [
+        result[mac_hash] = [
             {"timestamp": d["timestamp"].isoformat(), "rssi": d["rssi"]} for d in data
         ]
 

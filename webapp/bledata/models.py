@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 class BLEData(models.Model):
     mac = models.CharField(max_length=100)
+    mac_hash = models.CharField(max_length=100)
     rssi = models.IntegerField()
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=100)
