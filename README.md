@@ -13,7 +13,7 @@ Bluetooth Low Energy ESP32 Beacon collects data and sends to central service.
     ESP32 program runs a webservice on ESP32
 
 ## webapp:
-- webapp_
+- webapp:
     WebApp in Python Django recieves JSON format and logs to database.
 
 To run the webapp for view only on http: 
