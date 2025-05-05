@@ -16,7 +16,7 @@
     <table>
         <tr>
             <th>Hour</th>
-            <th>MAC-address</th>
+            <th>MAC-address-hash</th>
             <th>RSSI</th>
             <th>Name</th>
             <th>Count</th>
@@ -25,7 +25,7 @@
         {% for entry in ble_entries %}
         <tr>
             <td>{{ entry.hour }}</td>
-            <td>{{ entry.mac }}</td>
+            <td>{{ entry.mac_hash }}</td>
             <td>{{ entry.rssi }}</td>
             <td>{{ entry.name }}</td>
             <td>{{ entry.count }}</td>

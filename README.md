@@ -13,5 +13,8 @@ webapp:
 - webapp_
     WebApp in Python Django recieves JSON format and logs to database.
 
-To run the webapp: 
+To run the webapp for view only on http: 
     py manage.py runserver 192.168.137.1:80 
+
+To run the webapp for datagathering on https: 
+    py manage.py runserver_plus 192.168.137.1:443 --cert-file ../hereblewebapp/sslcert/localhost.crt --key-file ../herblewebapp/sslcert/localhost.key

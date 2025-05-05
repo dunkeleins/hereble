@@ -30,7 +30,7 @@ def receive_ble_data(request):
 
             for device in devices:
                 ble_entry = BLEData.objects.create(
-                    mac=device.get("mac"),
+                    mac_hash=device.get("mac_hash"),
                     rssi=device.get("rssi"),
                     name=device.get("name"),
                     distance=device.get("distance"),
@@ -68,7 +68,7 @@ def show_graph(request):
     top_macs = (
         BLEData.objects
         .filter(timestamp__range=(start, end))
-        .values('mac')
+        .values('mac_hash')
         .annotate(max_rssi=Max('rssi'))
         .order_by('-max_rssi')[:2]
     )
@@ -77,10 +77,10 @@ def show_graph(request):
     labels_set = set()
 
     for mac_entry in top_macs:
-        mac = mac_entry['mac']
+        mac_hash = mac_entry['mac_hash']
         data_points = (
             BLEData.objects
-            .filter(mac=mac, timestamp__range=(start, end))
+            .filter(mac_hash=mac_hash, timestamp__range=(start, end))
             .order_by('timestamp')
         )
 
@@ -90,7 +90,7 @@ def show_graph(request):
         labels_set.update(timestamps)
 
         datasets.append({
-            "label": f"{mac}",
+            "label": f"{mac_hash}",
             "data": rssi_values,
             "fill": False,
             "borderColor": "rgba(75,192,192,1)",
@@ -115,11 +115,11 @@ def list_ble_data(request):
         BLEData.objects
         .filter(rssi__gt=-30)
         .annotate(hour=TruncMinute("timestamp"))
-        .values("mac", "hour", "name", "environment")
+        .values("mac_hash", "hour", "name", "environment")
         .annotate(count=Count("id"),
                   rssi=Max("rssi"),
         )
-        .order_by("-hour", "mac")
+        .order_by("-hour", "mac_hash")
     )
 
     return render(request, "ble_list.html", {"ble_entries": top_rssi_last_hour})
@@ -148,7 +148,7 @@ def db_analyze_graph_by_date(request):
 
 def generate_minute_table(request):
     # Daten holen
-    data = BLEData.objects.all().values("timestamp", "name", "mac")
+    data = BLEData.objects.all().values("timestamp", "name", "mac_hash")
     df = pd.DataFrame(list(data))
 
     if df.empty:

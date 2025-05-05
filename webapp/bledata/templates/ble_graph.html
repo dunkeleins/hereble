@@ -15,7 +15,7 @@
         BLE RSSI Verlauf
     </a></h2>
 
-    <label for="macSelect">Wähle MAC-Adresse(n):</label>
+    <label for="macSelect">Wähle MAC-Hash-Adresse(n):</label>
     <label>Zeitraum:</label>
     <input type="datetime-local" id="startTime">
     <input type="datetime-local" id="endTime">
@@ -59,10 +59,10 @@
                 // Schritt 1: Gruppiere Daten nach MAC
                 const macGroups = {};
                 rawData.forEach(entry => {
-                    if (!macGroups[entry.mac]) {
-                        macGroups[entry.mac] = [];
+                    if (!macGroups[entry.mac_hash]) {
+                        macGroups[entry.mac_hash] = [];
                     }
-                    macGroups[entry.mac].push(entry);
+                    macGroups[entry.mac_hash].push(entry);
                 });
 
                 // Schritt 2: Filtere MACs raus, die jemals > -30 hatten
@@ -120,27 +120,27 @@
             let allData = [];
 
             if (selectedMacs.length === 0) {
-                const macAddresses = [...new Set(rawData.map(entry => entry.mac))]; 
-                allData = macAddresses.map((mac, idx) => {
+                const macAddresses = [...new Set(rawData.map(entry => entry.mac_hash))]; 
+                allData = macAddresses.map((mac_hash, idx) => {
                     // Filter MAC Adressen die nie nah am Messgerät waren
                     let bufData = filterWeakDevices(rawData, onlyWeakDevices); 
 
-                    const macData = bufData.filter(entry => entry.mac === mac); // Filtere nach MAC-Adresse
+                    const macData = bufData.filter(entry => entry.mac_hash === mac_hash); // Filtere nach MAC-Adresse
                     return {
-                        label: mac,
+                        label: mac_hash,
                         data: macData.map(entry => ({ x: new Date(entry.timestamp), y: entry.rssi })),
                         borderColor: colors[idx % colors.length],
                         tension: 0.2
                     };
                 });
             } else {
-                allData = selectedMacs.map((mac, idx) => {
+                allData = selectedMacs.map((mac_hash, idx) => {
                 // Filter MAC Adressen die nie nah am Messgerät waren
                 let bufData = filterWeakDevices(rawData, onlyWeakDevices);
-                const macData = bufData.filter(entry => entry.mac === mac); // Filtere nach MAC-Adresse
+                const macData = bufData.filter(entry => entry.mac_hash === mac_hash); // Filtere nach MAC-Adresse
 
                 return {
-                    label: mac,
+                    label: mac_hash,
                     data: macData.map(entry => ({ x: new Date(entry.timestamp), y: entry.rssi })),
                     borderColor: colors[idx % colors.length],
                     tension: 0.2

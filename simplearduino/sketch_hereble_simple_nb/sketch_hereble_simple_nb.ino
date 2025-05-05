@@ -7,8 +7,23 @@
 #include <vector>
 #include <algorithm>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include "mbedtls/sha256.h"
+#include "constants_ble.h"
+
+/*
+constants_ble.h:
+const char* ssid = "xxxx";
+const char* password = "xxxx";
+const char* serverUrl = "https://ip.ip.ip.ip/sendbledata/";
+const char* salt = "salt"; 
+const char* root_ca = \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIID...Certificate... \n" \
+"-----END CERTIFICATE-----\n";
+*/
 
 BLEScan* pBLEScan;
 String bleScanResults = "Keine BLE-Geräte gefunden";
@@ -22,12 +37,34 @@ bool bleFound = false;
 bool realLED = false;
 unsigned long ledOffTime = 0;
 
-const char* ssid = "hereble";
-const char* password = "123456789012";
-const char* serverUrl = "http://192.168.137.1/sendbledata/";
-
 // Funktionsprototypen
 void bleScanTask(void * parameter);
+
+String hashMacAddress(const String& mac) {
+  // SHA-256 Hash berechnen
+  byte shaResult[32]; // 256 Bit = 32 Byte
+  mbedtls_sha256_context ctx;
+  mbedtls_sha256_init(&ctx);
+  mbedtls_sha256_starts(&ctx, 0); // 0 = SHA-256 (nicht SHA-224)
+
+  String combined = mac + salt;
+
+  // In Byte-Array umwandeln
+  const char* combined_cstr = combined.c_str();
+
+  // MAC + Salt hinzufügen
+  mbedtls_sha256_update(&ctx, (const unsigned char*)combined_cstr, strlen(combined_cstr));
+  mbedtls_sha256_finish(&ctx, shaResult);
+  mbedtls_sha256_free(&ctx);
+
+  // Hex-String zurückgeben
+  String hashString = "";
+  for (int i = 0; i < 32; i++) {
+    if (shaResult[i] < 16) hashString += "0";
+    hashString += String(shaResult[i], HEX);
+  }
+  return hashString;
+}
 
 void writeLog(String msg) {
   if (msg != "") {
@@ -112,7 +149,8 @@ void bleScanTask(void * parameter) {
 
                         
             JsonObject jsonDevice = jsonDevices.createNestedObject();
-            jsonDevice["mac"] = device.getAddress().toString().c_str();
+            jsonDevice["mac"] = "";
+            jsonDevice["mac_hash"] = hashMacAddress(device.getAddress().toString().c_str()); 
             jsonDevice["rssi"] = device.getRSSI();
             jsonDevice["name"] = device.getName().c_str();
             jsonDevice["distance"] = calculateDistance(device.getRSSI(), referenceRSSI, pathLossExponent);
@@ -127,16 +165,19 @@ void bleScanTask(void * parameter) {
         serializeJson(doc, json);
 
         if (WiFi.status() == WL_CONNECTED) {
-            HTTPClient http;
-            http.begin(serverUrl);
-            http.addHeader("Content-Type", "application/json");
-            int httpResponseCode = http.POST(json);
+            WiFiClientSecure client;
+            client.setCACert(root_ca);  // Für verifizierte Verbindung
+
+            HTTPClient https;
+            https.begin(client, serverUrl);
+            https.addHeader("Content-Type", "application/json");
+            int httpResponseCode = https.POST(json);
             #if DEBUG
             Serial.print("HTTP Response code: ");
             Serial.println(httpResponseCode);
             #endif
             Serial.println(json);
-            http.end();
+            https.end();
         } else {
             #if DEBUG
             Serial.println("WiFi not connected");
