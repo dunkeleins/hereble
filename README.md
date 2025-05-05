@@ -1,6 +1,9 @@
 # hereble
 Bluetooth Low Energy ESP32 Beacon collects data and sends to central service.
 
+## analysye:
+- Machine Learning test for moving or static devices
+
 ## simplearduino:
 - sketch_herble:
     ESP32 program to scan for BLE devices and send information on serial output.
