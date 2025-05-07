@@ -1,7 +1,7 @@
 # hereble
 Bluetooth Low Energy ESP32 Beacon collects data and sends to central service.
 
-## analysye:
+## analyse:
 - Machine Learning test for moving or static devices
 
 ## simplearduino:
