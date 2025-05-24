@@ -26,21 +26,35 @@ To run the webapp for datagathering on https (certificates not in source):
     py manage.py runserver_plus 192.168.137.1:443 --cert-file ../hereblewebapp/sslcert/localhost.crt --key-file ../herblewebapp/sslcert/localhost.key
 ```
 
+# Necessary files and configurations
+## constants_ble.h:
+This file is needed to run the arduino sketch on ESP32
+```
+const char* ssid = "xxxx";
+const char* password = "xxxx";
+const char* serverUrl = "https://ip.ip.ip.ip/sendbledata/";
+const char* salt = "salt"; 
+const char* root_ca = \
+"-----BEGIN CERTIFICATE-----\n" \
+"MIID...Certificate... \n" \
+"-----END CERTIFICATE-----\n";
+*/
+```
 
-# Self signed certificate generation for local usage only
+## Self signed certificate generation for local usage only
 ```
 mkdir sslcert && cd sslcert
 ```
-## generate private key
+### generate private key
 ```
 openssl genrsa -out localhost.key 2048
 ```
-## generate self signed vertificate valid 365 days
+### generate self signed vertificate valid 365 days
 ```
 openssl req -new -x509 -key localhost.key -out localhost.crt -days 365 \
   -subj "/C=AT/ST=Tirol/L=Innsbruck/O=BachelorarbeitIndra/CN=localhost"
 ```
-## insert ca to constants_ble.h on ESP32
+### insert ca to constants_ble.h on ESP32
 ```
 cat sslcert/localhost.crt
 ```
