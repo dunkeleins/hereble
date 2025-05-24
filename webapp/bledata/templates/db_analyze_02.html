@@ -1,5 +1,10 @@
 {% load static %}
 <!-- templates/db_analyze_02.html -->
+<!--
+    Diese Datei ist Teil einer Django-Webanwendung, die Daten von Bluetooth Low Energy (BLE) Geräten verarbeitet.
+    Das Template verwendet die Django-Template-Sprache, um statische Dateien zu laden und URLs zu generieren.
+    Es zeigt ein Diagramm, das die RSSI-Werte von BLE-Geräten über die Zeit darstellt.
+-->
 <!DOCTYPE html>
 <html>
 <head>
@@ -29,14 +34,13 @@
             loadRSSIChart();
         });
 
+        // Laden der RSSI-Daten und Erstellen des Diagramms
         async function loadRSSIChart() {
             const start = document.getElementById("startTime").value;
             const end = document.getElementById("endTime").value;
             const nameFilter = document.getElementById("nameFilter").value.trim();
             const res = await fetch(`/api/rssi_chart_data?name=${nameFilter}&start=${start}&end=${end}`);
             const { datasets } = await res.json();
-            //const datasets = test_dataset; // Testdaten verwenden
-            //console.log(datasets);
 
             const ctx = document.getElementById("rssiChart").getContext("2d");
 
@@ -67,6 +71,7 @@
             });
         }  
 
+        // Funktion zum Abrufen der URL-Parameter
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
@@ -76,6 +81,7 @@
             };
         }
 
+        // Setzt die Standardwerte für Start- und Endzeit basierend auf den URL-Parametern
         function setDefaultTimestamps() {
             const { start, end, name } = getUrlParams();
 

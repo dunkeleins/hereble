@@ -1,5 +1,13 @@
 {% load static %}
 <!-- templates/ble_graph.html -->
+<!--
+    Diese Datei ist Teil einer Django-Webanwendung, die Daten von Bluetooth Low Energy (BLE) Geräten verarbeitet.
+    Das Template verwendet die Django-Template-Sprache, um statische Dateien zu laden und URLs zu generieren.
+    Es enthält ein HTML-Dokument, das ein Chart.js-Diagramm anzeigt, um den RSSI-Verlauf von BLE-Geräten darzustellen.
+    Die Seite ermöglicht es dem Benutzer, MAC-Adressen auszuwählen, einen Zeitraum festzulegen und die Daten entsprechend zu filtern.
+    Die Chart.js-Bibliothek wird verwendet, um die Daten visuell darzustellen, und Luxon wird für die Zeitformatierung verwendet.
+-->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -31,20 +39,24 @@
     <script>
         let chart;
 
+        // Laden des Charts, wenn die Seite geladen wird
         window.addEventListener("DOMContentLoaded", () => {
             loadChart();
         });
 
+        // Funktion zum Auswählen aller MACs
         function checkAllMacs() {
             const checkboxes = document.querySelectorAll('input[name="macs"]');
             checkboxes.forEach(cb => cb.checked = true);
         }
         
+        // Funktion zum Abwählen aller MACs
         function uncheckAllMacs() {
             const checkboxes = document.querySelectorAll('input[name="macs"]');
             checkboxes.forEach(cb => cb.checked = false);
         }
 
+        // Funktion zum Abrufen der URL-Parameter
         function getUrlParams() {
             const params = new URLSearchParams(window.location.search);
             return {
@@ -54,6 +66,7 @@
             };
         }
 
+        // Funktion zum Filtern der Daten nach schwachen Geräten
         function filterWeakDevices(rawData, onlyWeakDevices) {
             if (onlyWeakDevices) {
                 // Schritt 1: Gruppiere Daten nach MAC
@@ -78,6 +91,7 @@
             return bufData;
         }
 
+        // Funktion zum Abrufen der MAC-Adressen und Erstellen der Checkboxen
         async function fetchMACs() {
             const { macs: selectedMacsFromUrl } = getUrlParams();
             const start = document.getElementById("startTime").value;
@@ -100,14 +114,18 @@
                 label.textContent = mac;
                 label.insertBefore(checkbox, label.firstChild); // Insert checkbox before label text
                 checkboxesContainer.appendChild(label);
-                //checkboxesContainer.appendChild(document.createElement("nbsp")); // Add a line break
             });
         }
 
+        // Funktion zum Laden des Charts
         async function loadChart() {
+            // Clear previous chart if it exists
+            if (window.rssiChart instanceof Chart) {
+                window.rssiChart.destroy();
+            }
+
+            // Fetch selected MAC addresses and time range
             const selectedMacs = Array.from(document.querySelectorAll('input[name="macs"]:checked')).map(el => el.value);
-            //const macSelect = document.getElementById("macSelect");
-            //const selectedMacs = Array.from(macSelect.selectedOptions).map(opt => opt.value);
             const start = document.getElementById("startTime").value;
             const end = document.getElementById("endTime").value;
             const onlyWeakDevices = document.getElementById("onlyWeakDevices").checked;
@@ -148,15 +166,11 @@
                 });
             }
 
-
             const timestamps = allData.flatMap(d => d.data.map(entry => entry.x));
             const minTime = new Date(Math.min(...timestamps));
             const maxTime = new Date(Math.max(...timestamps));
 
-            if (window.rssiChart instanceof Chart) {
-                window.rssiChart.destroy();
-            }
-
+            // Wenn keine Daten vorhanden sind, setze minTime und maxTime auf den aktuellen Zeitpunkt
             const ctx = document.getElementById("rssiChart").getContext("2d");
             window.rssiChart = new Chart(ctx, {
                 // type: "line",
@@ -198,6 +212,7 @@
             });
         }
 
+        // Setze Standardwerte für Start- und Endzeit, wenn keine Parameter in der URL vorhanden sind
         function setDefaultTimestamps() {
             const { start, end } = getUrlParams();
 

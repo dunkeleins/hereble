@@ -1,4 +1,4 @@
-#define DEBUG true
+#define DEBUG false // Set to true for debugging output in writeLog()
 
 #include <BLEDevice.h>
 #include <BLEScan.h>
@@ -14,6 +14,10 @@
 #include "constants_ble.h"
 
 /*
+Das ist ein einfaches Arduino-Sketch zum Scannen von BLE-Geräten und Senden ihrer Daten an einen Server.
+Dieses Beispiel verwendet die ESP32-Bibliotheken für BLE, WiFi und HTTP-Client.
+
+Damit dieser Sketch funktioniert, muss die Datei "constants_ble.h" im selben Verzeichnis wie dieses Sketch liegen.
 constants_ble.h:
 const char* ssid = "xxxx";
 const char* password = "xxxx";
@@ -25,21 +29,25 @@ const char* root_ca = \
 "-----END CERTIFICATE-----\n";
 */
 
+// Globale Variablen
 BLEScan* pBLEScan;
 String bleScanResults = "Keine BLE-Geräte gefunden";
 int rssiThreshold;
 Preferences preferences;
-
-const int ledPin = 21;
-const int buttonPin = 36;
 bool ledOn = false;
 bool bleFound = false;
 bool realLED = false;
 unsigned long ledOffTime = 0;
+int iNachlauf = 5000; // Nachlaufzeit in Millisekunden
+
+// ESP32 Pin Konfiguration
+const int ledPin = 21;
+const int buttonPin = 36;
 
 // Funktionsprototypen
 void bleScanTask(void * parameter);
 
+// Funktion zum Hashen der MAC-Adresse mit SHA-256 und Salt
 String hashMacAddress(const String& mac) {
   // SHA-256 Hash berechnen
   byte shaResult[32]; // 256 Bit = 32 Byte
@@ -66,6 +74,7 @@ String hashMacAddress(const String& mac) {
   return hashString;
 }
 
+// Funktion zum Schreiben von Log-Nachrichten auf der seriellen Konsole
 void writeLog(String msg) {
   if (msg != "") {
     Serial.println(String(millis()) + " " + msg);
@@ -97,16 +106,16 @@ void setup() {
     Serial.print("Connected to WiFi. IP address: ");
     Serial.println(WiFi.localIP());
     #endif
-    // CPU-Frequenz reduzieren
+    // CPU-Frequenz reduzieren, keine Verbesserung beim Energiebedarf, daher auskommentiert
     //setCpuFrequencyMhz(80);
 
     // BLE Setup
     BLEDevice::init("");
     BLEDevice::setPower(ESP_PWR_LVL_P20); // ESP32-S3 HighPower 20dbm
-    esp_ble_gap_config_local_privacy(true); // Rotiere lokale MAC
+    esp_ble_gap_config_local_privacy(true); // MAC-Randomisierung aktivieren
     pBLEScan = BLEDevice::getScan();
-    pBLEScan->setActiveScan(true); // Passive Scans verbrauchen weniger Energie, Active Scans finden mehr Geräte
-    pBLEScan->setInterval(5000); // Scan-Intervall
+    pBLEScan->setActiveScan(true); // Passive Scans verbrauchen weniger Energie, Active Scans finden mehr Geräte, daher auf true setzen
+    pBLEScan->setInterval(5000); // Scan-Intervall verbressert die anzahl der gefundenen Geräte
     pBLEScan->setWindow(4999); // Scan-Dauer
     
     xTaskCreatePinnedToCore(bleScanTask, "BLE_Scan_Task", 4096, NULL, 1, NULL, 0);
@@ -117,8 +126,8 @@ float calculateDistance(int rssi, int rssiAtOneMeter, float pathLossExponent) {
 }
 
 void bleScanTask(void * parameter) {
-    int referenceRSSI = -60;      // RSSI at 1 m distance
-    float pathLossExponent = 2.0; // Enivronment (2 = open field, 3 = indoor, 4 = crowded)
+    int referenceRSSI = -140;      // RSSI 60 entspricht ca. 1 Meter Entfernung; für Testzwecke anpassen
+    float pathLossExponent = 2.0; // Umgebung für die Berechnung der Distanz (2 = open field, 3 = indoor, 4 = crowded)
     while (true) {
         BLEScanResults *foundDevices = pBLEScan->start(1, false); // 0 unendlich langer Scan, blockiert den Thread
         int deviceCount = 0;
@@ -140,6 +149,8 @@ void bleScanTask(void * parameter) {
         JsonArray jsonDevices = doc.createNestedArray("devices");
 
         int deviceNr = 1;
+        // Ergebnisse formatieren
+        bleScanResults = "";
         for (auto &device : devices) {
             bleScanResults += String(deviceNr) + ", ";
             bleScanResults += String(device.getRSSI()) + ", ";
@@ -147,7 +158,7 @@ void bleScanTask(void * parameter) {
             bleScanResults += String(distance) + " m";
             bleScanResults += "<br/>";
 
-                        
+            // JSON-Daten für jedes Gerät erstellen
             JsonObject jsonDevice = jsonDevices.createNestedObject();
             jsonDevice["mac"] = "";
             jsonDevice["mac_hash"] = hashMacAddress(device.getAddress().toString().c_str()); 
@@ -161,9 +172,11 @@ void bleScanTask(void * parameter) {
             deviceNr++;
         }
 
+        // JSON-Dokument vorbereiten
         String json;
         serializeJson(doc, json);
 
+        // JSON-Daten an den Server senden
         if (WiFi.status() == WL_CONNECTED) {
             WiFiClientSecure client;
             client.setCACert(root_ca);  // Für verifizierte Verbindung
@@ -193,20 +206,22 @@ void bleScanTask(void * parameter) {
         }
         
         #if DEBUG
-        //Serial.println(bleScanResults);
-        writeLog(bleScanResults);        
+            //Serial.println(bleScanResults);
+            writeLog(bleScanResults);        
         #endif
+
         pBLEScan->clearResults();
         bleScanResults = "";
         delay(500);
     }
 }
 
+// Hauptprogramm
 void loop() {
     // Button Logik
     if (digitalRead(buttonPin) == LOW || bleFound) {
         ledOn = true;
-        ledOffTime = millis() + 5000; // Wartezeit bis wieder ausgeschaltet werden soll (Nachlauf)
+        ledOffTime = millis() + iNachlauf; // Wartezeit bis wieder ausgeschaltet werden soll (Nachlauf)
         digitalWrite(ledPin, LOW);
         realLED = true;
     }
@@ -221,10 +236,11 @@ void loop() {
     if (millis() - lastTime > 5000) { // Alle 5 Sekunden Geräte anzeigen
         lastTime = millis();
         #if DEBUG
-        //if (realLED) Serial.println("LED ON");        
-        //if (!realLED) Serial.println("LED OFF");        
+            if (realLED) Serial.println("LED ON");        
+            if (!realLED) Serial.println("LED OFF");        
         #endif
         
     }
+    // Kurze Pause, um den Energieverbrauch zu reduzieren
     delay(1000);
 }

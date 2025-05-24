@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 from . import api_views
 
+# webapp/bledata/urls.py
+# URL-Konfiguration für die BLE-Daten-App
+
 urlpatterns = [
     path('bledata/', views.bledata, name='bledata'),
     path('sendbledata/', views.receive_ble_data, name='receive_ble_data'),    

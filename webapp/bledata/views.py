@@ -16,10 +16,15 @@ from .models import BLEData
 import pandas as pd
 import numpy as np
 
+# webapp/bledata/views.py
+# Diese View rendert die Hauptseite für BLE-Daten
+
+# Startseite für BLE-Daten
 def bledata(request):
   template = loader.get_template('first.html')
   return HttpResponse(template.render())
 
+# API-View, um BLE-Daten zu empfangen und in der Datenbank zu speichern
 @csrf_exempt
 def receive_ble_data(request):
     if request.method == "POST":
@@ -48,7 +53,7 @@ def receive_ble_data(request):
 
     return JsonResponse({"status": "error", "message": "Only POST allowed"}, status=405)
 
-
+# Show Graph View
 def show_graph(request):
     # Zeitbereich aus dem GET-Parameter lesen
     macs_str = request.GET.get("macs", "")
@@ -107,9 +112,11 @@ def show_graph(request):
 
     return render(request, "ble_graph.html", context)
 
+# View für die BLE-Daten-Chart
 def ble_chart_view(request):
     return render(request, "ble_graph.html")
 
+# Listet die BLE-Daten der letzten Stunde nach RSSI sortiert auf
 def list_ble_data(request):
     top_rssi_last_hour = (
         BLEData.objects
@@ -124,6 +131,7 @@ def list_ble_data(request):
 
     return render(request, "ble_list.html", {"ble_entries": top_rssi_last_hour})
 
+# Analysiert die BLE-Daten und gruppiert sie nach Intervallen und Namen
 def db_analyze_group_by(request):
     data = list(BLEData.objects.all().values("timestamp", "name", "rssi", "environment"))
     if not data:
@@ -143,9 +151,11 @@ def db_analyze_group_by(request):
     # Die Tabelle an das Template übergeben
     return render(request, "db_analyze_01.html", {"html_table": html_table})
 
+# Analysiert die BLE-Daten und zeigt sie nach Datum gruppiert an
 def db_analyze_graph_by_date(request):
     return render(request, "db_analyze_02.html")
 
+# Generiert eine Tabelle, die die Anzahl der Apple-Geräte pro Minute anzeigt
 def generate_minute_table(request):
     # Daten holen
     data = BLEData.objects.all().values("timestamp", "name", "mac_hash")

@@ -1,6 +1,6 @@
 from django.db import models
 
-# Create your models here.
+# Datenbankmodell für BLE-Daten
 class BLEData(models.Model):
     mac = models.CharField(max_length=100)
     mac_hash = models.CharField(max_length=100)

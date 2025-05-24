@@ -1,4 +1,6 @@
-# bledata/api_views.py (oder views.py, je nach Aufbau)
+# bledata/api_views.py 
+# Django API-Views für BLE-Daten
+# Diese Views liefern JSON-Daten für BLE-Daten, MAC-Listen und RSSI-Daten.
 from django.http import JsonResponse
 from django.utils.timezone import make_aware, now
 from datetime import datetime, timedelta
@@ -11,6 +13,8 @@ from django.db.models import OuterRef, Subquery
 from django.utils.dateparse import parse_datetime
 
 
+
+# API-View, um BLE-Daten als JSON zu liefern
 @csrf_exempt
 def bledata_json(request):
     start_str = request.GET.get("start")
@@ -32,11 +36,13 @@ def bledata_json(request):
 
     return JsonResponse(list(data), safe=False)
 
+# Listet alle eindeutigen MAC-Hashes, die einen RSSI-Wert größer als -30 haben
 def mac_list(request):
     # filter auf rssi > -30
     macs = BLEData.objects.filter(rssi__gt=-30).values_list("mac_hash", flat=True).distinct().order_by("mac_hash")
     return JsonResponse(list(macs), safe=False)
 
+# Liefert RSSI-Daten für eine Liste von MAC-Hashes in einem bestimmten Zeitbereich
 def rssi_data(request):
     macs = request.GET.get("macs", "").split(",")
     start_str = request.GET.get("start")
@@ -59,11 +65,12 @@ def rssi_data(request):
 
     return JsonResponse(result)
 
-
+# Liefert eine Liste aller Tage, an denen BLE-Daten vorhanden sind
 def available_days(request):
     days = BLEData.objects.annotate(day=TruncDate("timestamp")).values_list("day", flat=True).distinct().order_by("day")
     return JsonResponse({"days": list(days)})
 
+# Liefert die RSSI-Daten für ein bestimmtes Gerät (MAC-Hash) in einem bestimmten Zeitbereich
 def rssi_chart_data(request):
     start_str = request.GET.get('start')
     end_str = request.GET.get('end')
