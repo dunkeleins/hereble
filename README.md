@@ -1,34 +1,34 @@
 # hereble
-Bluetooth Low Energy ESP32 Beacon collects data and sends to central service.
+Bluetooth Low Energy ESP32 Beacon sammelt Daten und sendet diese an einen zentralen Webservice auf Basis des Python Frameworks Django.
 
 ## analyse:
-- Machine Learning test for moving or static devices
+- Machine Learning Test zum unterscheiden von statischen oder bewegten Geräten.
 
 ## simplearduino:
 - sketch_herble:
-    ESP32 program to scan for BLE devices and send information on serial output.
+    ESP32 Programm zum scannen nach BLE Geräten. Liefert den Output über die serielle Schnittstelle.
 - sketch_herble_simple_nb:
-    ESP32 program to send BLE informations in JSON format to a http service. Final version.
+    ESP32 Programm zum scannen nach BLE Geräten. Sendet die Daten im JSON Format an einen Webservice.
 - sketch_hereble_webservice:
-    ESP32 program runs a webservice on ESP32 and can be accessed from browser after connected to accesspoint HereBLE
+    ESP32 Programm zum scannen nach BLE Geräten. Bietet einen eigenen Webservice am Gerät, der die gemessenen Daten über einen Broeser anzeigt.
 
 ## webapp:
 - webapp:
-    WebApp in Python Django recieves JSON format and logs to database.
+    WebApp Python Framwork Django empfängt JSON Daten und speichert diese in der SQLLite Datenbank. Zusätzliches Webfrontend ermöglicht die Anzeige der Daten in grafischer und tabellarischer Form.
 
-To run the webapp for view only on http: 
+Starten der WebApp auf Port 80 (unsicher): 
 ```
     py manage.py runserver 192.168.137.1:80 
 ```
 
-To run the webapp for datagathering on https (certificates not in source): 
+Starten der WebApp auf Port 443 mit SSL Verschlüsselung, Zertifikate müssen angelegt oder eingebunden werden, sind nicht teil des Repositories: 
 ```
     py manage.py runserver_plus 192.168.137.1:443 --cert-file ../hereblewebapp/sslcert/localhost.crt --key-file ../herblewebapp/sslcert/localhost.key
 ```
 
-# Necessary files and configurations
+# Notwendige Dateien und Konfigurationen
 ## constants_ble.h:
-This file is needed to run the arduino sketch on ESP32
+Diese Datei wird benötigt um den Arduino Sketch auf dem ESP32 zu kompilieren.
 ```
 const char* ssid = "xxxx";
 const char* password = "xxxx";
@@ -41,7 +41,7 @@ const char* root_ca = \
 */
 ```
 
-## Self signed certificate generation for local usage only
+## Self signed Zertifikat Erstellung nur für den lokalen Gebrauch geeignet
 ```
 mkdir sslcert && cd sslcert
 ```
