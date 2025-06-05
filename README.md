@@ -1,6 +1,6 @@
 # hereble
 Bluetooth Low Energy ESP32 Beacon sammelt Daten von BLE Geräten in der Umgebung und sendet diese an einen zentralen Webservice auf Basis des Python Frameworks Django. Ein gemeinsames Netzwerk vorausgesetzt.
-![systemarchitektur](https://github.com/user-attachments/assets/b7d30024-ccfb-4a7b-a473-67f740872058)
+![systemarchitektur](https://github.com/user-attachments/assets/c6e764ff-8ce1-4082-96aa-6a1ca5bb3999)
 
 ## analyse:
 - Machine Learning Test zum unterscheiden von statischen oder bewegten Geräten.
